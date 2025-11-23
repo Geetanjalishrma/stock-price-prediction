@@ -18,15 +18,13 @@ pio.renderers.default = "colab"
 
 st.title("📈 Stock Prediction App")
 
-# --------------------------
-# User Inputs
-# --------------------------
+
 ticker = st.text_input("Enter stock ticker (e.g., AAPL, TSLA, INFY.NS):", "AAPL")
 years = st.number_input("Enter how many years of data you want", min_value=1, max_value=20, value=5)
 
 if st.button("Run Model"):
 
-    # ORIGINAL CODE STARTS (unchanged)
+    
     period = f"{years}y"
 
     data = yf.download(ticker, period=period, interval="1d")
@@ -92,7 +90,7 @@ if st.button("Run Model"):
 
     candlestick_data = data.iloc[-len(real_prices):]
 
-    # Debug prints
+    
     print("candlestick_data shape:", candlestick_data.shape)
     print("predicted_prices shape:", predicted_prices.shape)
     print(candlestick_data.columns)
@@ -100,7 +98,7 @@ if st.button("Run Model"):
     print("NaNs per column:\n", candlestick_data[["Open","High","Low","Close"]].isna().sum())
     print("Index dtype:", candlestick_data.index.dtype)
 
-    # Defensive copy & cleaning
+  
     df = data.copy() 
 
     try:
@@ -162,9 +160,6 @@ if st.button("Run Model"):
 
     st.plotly_chart(fig, use_container_width=True)
 
-       # -------------------------------
-    # PREDICT NEXT 60 DAYS
-    # -------------------------------
     future_days = 60
     last_60 = scaled_data[-60:].reshape(1, 60, 1)
 
@@ -174,20 +169,17 @@ if st.button("Run Model"):
         next_pred = model.predict(last_60, verbose=0)  # shape (1,1)
         future_predictions.append(next_pred[0][0])
 
-        # reshape prediction for LSTM window
+      
         next_pred_reshaped = next_pred.reshape(1, 1, 1)
 
-        # shift the last_60 window and append new prediction
         last_60 = np.append(last_60[:, 1:, :], next_pred_reshaped, axis=1)
 
-    # Inverse scale
+   
     future_predictions = scaler.inverse_transform(
         np.array(future_predictions).reshape(-1, 1)
     )
 
-    # -------------------------------
-    # CREATE FAKE OHLC FOR 60-DAY CANDLESTICK
-    # -------------------------------
+
     pred_close = future_predictions.flatten()
 
     pred_open = np.roll(pred_close, 1)
@@ -203,9 +195,7 @@ if st.button("Run Model"):
         periods=future_days
     )
 
-    # -------------------------------
-    # STREAMLIT FUTURE CANDLESTICK
-    # -------------------------------
+   
     fig_future = go.Figure()
 
     fig_future.add_trace(go.Candlestick(
